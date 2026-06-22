@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>漢字手書き入力デモ</title>
+<script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js"></script>
+<style>
+  #canvas {
+    border: 1px solid #000;
+    touch-action: none;
+  }
+  #result {
+    font-size: 24px;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h2>漢字手書き入力デモ</h2>
+
+<!-- 出題される漢字 -->
+<p>出題：<span id="question">人</span></p>
+
+<!-- 手書きキャンバス -->
+<canvas id="canvas" width="200" height="200"></canvas><br>
+
+<button id="clearBtn">クリア</button>
+<button id="recognizeBtn">認識</button>
+
+<!-- 認識結果の候補 -->
+<div id="candidates"></div>
+
+<!-- 選んだ漢字が入る -->
+<p>選んだ漢字：<input type="text" id="selectedKanji" readonly></p>
+
+<button id="okBtn">OK</button>
+
+<!-- 正解／不正解の表示 -->
+<div id="result"></div>
+
+<script>
+  // --- 手書きキャンバス ---
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+
+  canvas.addEventListener("mousedown", () => drawing = true);
+  canvas.addEventListener("mouseup", () => drawing = false);
+  canvas.addEventListener("mousemove", draw);
+
+  function draw(e) {
+    if (!drawing) return;
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(e.offsetX, e.offsetY, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  document.getElementById("clearBtn").onclick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById("candidates").innerHTML = "";
+    document.getElementById("selectedKanji").value = "";
+    document.getElementById("result").textContent = "";
+  };
+
+  // --- 認識処理 ---
+  document.getElementById("recognizeBtn").onclick = () => {
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const strokes = JHRecognizer.imageToStrokes(img);
+
+    const results = JHRecognizer.recognize(strokes, 10);
+    const candidatesDiv = document.getElementById("candidates");
+    candidatesDiv.innerHTML = "";
+
+    results.forEach(r => {
+      const btn = document.createElement("button");
+      btn.textContent = r.kanji;
+      btn.onclick = () => {
+        document.getElementById("selectedKanji").value = r.kanji;
+      };
+      candidatesDiv.appendChild(btn);
+    });
+  };
+
+  // --- OKボタンで判定 ---
+  document.getElementById("okBtn").onclick = () => {
+    const question = document.getElementById("question").textContent;
+    const answer = document.getElementById("selectedKanji").value;
+    const result = document.getElementById("result");
+
+    if (answer === "") {
+      result.textContent = "漢字を選んでください";
+      result.style.color = "black";
+      return;
+    }
+
+    if (question === answer) {
+      result.textContent = "正解！";
+      result.style.color = "green";
+    } else {
+      result.textContent = "間違い…";
+      result.style.color = "red";
+    }
+  };
+</script>
+
+</body>
+</html>

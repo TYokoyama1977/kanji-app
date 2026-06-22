@@ -20,24 +20,19 @@
 
 <h2>漢字手書き入力デモ</h2>
 
-<!-- 出題される漢字 -->
 <p>出題：<span id="question">人</span></p>
 
-<!-- 手書きキャンバス -->
 <canvas id="canvas" width="200" height="200"></canvas><br>
 
 <button id="clearBtn">クリア</button>
 <button id="recognizeBtn">認識</button>
 
-<!-- 認識結果の候補 -->
 <div id="candidates"></div>
 
-<!-- 選んだ漢字が入る -->
 <p>選んだ漢字：<input type="text" id="selectedKanji" readonly></p>
 
 <button id="okBtn">OK</button>
 
-<!-- 正解／不正解の表示 -->
 <div id="result"></div>
 
 <script>
@@ -48,6 +43,7 @@
 
   canvas.addEventListener("mousedown", () => drawing = true);
   canvas.addEventListener("mouseup", () => drawing = false);
+  canvas.addEventListener("mouseleave", () => drawing = false);
   canvas.addEventListener("mousemove", draw);
 
   function draw(e) {
@@ -68,17 +64,24 @@
   // --- 認識処理 ---
   document.getElementById("recognizeBtn").onclick = () => {
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const strokes = JHRecognizer.imageToStrokes(img);
 
-    const results = JHRecognizer.recognize(strokes, 10);
+    // JHR 認識器
+    const recognizer = new JHR.Recognizer();
+
+    // strokes を生成
+    const strokes = recognizer.imageToStrokes(img);
+
+    // 認識（上位10件）
+    const results = recognizer.recognize(strokes).slice(0, 10);
+
     const candidatesDiv = document.getElementById("candidates");
     candidatesDiv.innerHTML = "";
 
     results.forEach(r => {
       const btn = document.createElement("button");
-      btn.textContent = r.kanji;
+      btn.textContent = r.character;  // ← JHR は character を返す
       btn.onclick = () => {
-        document.getElementById("selectedKanji").value = r.kanji;
+        document.getElementById("selectedKanji").value = r.character;
       };
       candidatesDiv.appendChild(btn);
     });

@@ -1,136 +1,54 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>漢字手書き入力デモ2</title>
-<script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js"></script>
-<style>
-  #canvas {
-    border: 1px solid #000;
-    touch-action: none;
-  }
-  #result {
-    font-size: 24px;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  /* 右下にバージョン表示 */
-  #version {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    font-size: 14px;
-    color: #555;
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>シンプル手書きキャンバス</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #canvas {
+            border: 2px solid #333;
+            touch-action: none;
+        }
+    </style>
 </head>
 <body>
 
-<h2>漢字手書き入力デモ</h2>
-
-<p>出題：<span id="question">人</span></p>
-
-<canvas id="canvas" width="200" height="200"></canvas><br>
-
-<button id="clearBtn">クリア</button>
-<button id="recognizeBtn">認識</button>
-
-<div id="candidates"></div>
-
-<p>選んだ漢字：<input type="text" id="selectedKanji" readonly></p>
-
-<button id="okBtn">OK</button>
-
-<div id="result"></div>
-
-<!-- バージョン表示 -->
-<div id="version"></div>
+<h2>マウスで描けるキャンバス</h2>
+<canvas id="canvas" width="300" height="300"></canvas>
 
 <script>
-  // --- バージョン情報 ---
-  const APP_VERSION = "1.0.1";
-  document.getElementById("version").textContent = "Version: " + APP_VERSION;
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-  // --- 手書きキャンバス ---
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
+    let drawing = false;
 
-  let drawing = false;
-  let lastX = 0;
-  let lastY = 0;
-
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "black";
-
-  canvas.addEventListener("mousedown", (e) => {
-    drawing = true;
-    lastX = e.offsetX;
-    lastY = e.offsetY;
-  });
-
-  canvas.addEventListener("mouseup", () => drawing = false);
-  canvas.addEventListener("mouseleave", () => drawing = false);
-
-  canvas.addEventListener("mousemove", (e) => {
-    if (!drawing) return;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-    lastX = e.offsetX;
-    lastY = e.offsetY;
-  });
-
-  // --- クリア ---
-  document.getElementById("clearBtn").onclick = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById("candidates").innerHTML = "";
-    document.getElementById("selectedKanji").value = "";
-    document.getElementById("result").textContent = "";
-  };
-
-  // --- 認識処理 ---
-  document.getElementById("recognizeBtn").onclick = () => {
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    const recognizer = new JHR.Recognizer();
-    const strokes = recognizer.imageToStrokes(img);
-    const results = recognizer.recognize(strokes).slice(0, 10);
-
-    const candidatesDiv = document.getElementById("candidates");
-    candidatesDiv.innerHTML = "";
-
-    results.forEach(r => {
-      const btn = document.createElement("button");
-      btn.textContent = r.character;
-      btn.onclick = () => {
-        document.getElementById("selectedKanji").value = r.character;
-      };
-      candidatesDiv.appendChild(btn);
+    canvas.addEventListener("mousedown", () => {
+        drawing = true;
+        ctx.beginPath();
     });
-  };
 
-  // --- OKボタンで判定 ---
-  document.getElementById("okBtn").onclick = () => {
-    const question = document.getElementById("question").textContent;
-    const answer = document.getElementById("selectedKanji").value;
-    const result = document.getElementById("result");
+    canvas.addEventListener("mouseup", () => {
+        drawing = false;
+    });
 
-    if (answer === "") {
-      result.textContent = "漢字を選んでください";
-      result.style.color = "black";
-      return;
-    }
+    canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
 
-    if (question === answer) {
-      result.textContent = "正解！";
-      result.style.color = "green";
-    } else {
-      result.textContent = "間違い…";
-      result.style.color = "red";
-    }
-  };
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    });
 </script>
 
 </body>

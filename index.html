@@ -15,8 +15,12 @@
         }
         #result {
             margin-top: 20px;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
+        }
+        #candidates {
+            margin-top: 10px;
+            font-size: 20px;
         }
     </style>
 
@@ -34,6 +38,7 @@
 <button id="recognizeBtn">認識</button>
 
 <div id="result">認識結果：まだなし</div>
+<div id="candidates"></div>
 
 <script>
     const canvas = document.getElementById("canvas");
@@ -41,6 +46,7 @@
     const clearBtn = document.getElementById("clearBtn");
     const recognizeBtn = document.getElementById("recognizeBtn");
     const resultDiv = document.getElementById("result");
+    const candidatesDiv = document.getElementById("candidates");
 
     let drawing = false;
 
@@ -61,7 +67,7 @@
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 6;   // ← 少し細くした
         ctx.lineCap = "round";
         ctx.strokeStyle = "#000";
 
@@ -73,11 +79,13 @@
     clearBtn.addEventListener("click", () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         resultDiv.textContent = "認識結果：まだなし";
+        candidatesDiv.textContent = "";
     });
 
     // --- 認識 ---
     recognizeBtn.addEventListener("click", async () => {
         resultDiv.textContent = "認識中…";
+        candidatesDiv.textContent = "";
 
         // キャンバスを PNG に変換
         const dataURL = canvas.toDataURL("image/png");
@@ -86,11 +94,17 @@
         const jhr = new JHR();
         const result = await jhr.recognize(dataURL);
 
-        if (result && result.length > 0) {
-            resultDiv.textContent = "認識結果：" + result[0].character;
-        } else {
+        if (!result || result.length === 0) {
             resultDiv.textContent = "認識できませんでした";
+            return;
         }
+
+        // 第1候補
+        resultDiv.textContent = "認識結果：" + result[0].character;
+
+        // 複数候補（最大5件）
+        const list = result.slice(0, 5).map(r => r.character).join("　");
+        candidatesDiv.textContent = "候補：" + list;
     });
 </script>
 

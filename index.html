@@ -54,21 +54,35 @@
   // --- 手書きキャンバス ---
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-  let drawing = false;
 
-  canvas.addEventListener("mousedown", () => drawing = true);
+  let drawing = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "black";
+
+  canvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  });
+
   canvas.addEventListener("mouseup", () => drawing = false);
   canvas.addEventListener("mouseleave", () => drawing = false);
-  canvas.addEventListener("mousemove", draw);
 
-  function draw(e) {
+  canvas.addEventListener("mousemove", (e) => {
     if (!drawing) return;
-    ctx.fillStyle = "black";
     ctx.beginPath();
-    ctx.arc(e.offsetX, e.offsetY, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  });
 
+  // --- クリア ---
   document.getElementById("clearBtn").onclick = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById("candidates").innerHTML = "";
@@ -80,13 +94,8 @@
   document.getElementById("recognizeBtn").onclick = () => {
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    // JHR 認識器
     const recognizer = new JHR.Recognizer();
-
-    // strokes を生成
     const strokes = recognizer.imageToStrokes(img);
-
-    // 認識（上位10件）
     const results = recognizer.recognize(strokes).slice(0, 10);
 
     const candidatesDiv = document.getElementById("candidates");
@@ -94,7 +103,7 @@
 
     results.forEach(r => {
       const btn = document.createElement("button");
-      btn.textContent = r.character;  // JHR は character を返す
+      btn.textContent = r.character;
       btn.onclick = () => {
         document.getElementById("selectedKanji").value = r.character;
       };

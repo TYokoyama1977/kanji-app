@@ -1,137 +1,78 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>漢字手書き入力デモ</title>
-<script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js"></script>
-<style>
-  #canvas {
-    border: 1px solid #000;
-    touch-action: none;
-  }
-  #result {
-    font-size: 24px;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  /* 右下にバージョン表示 */
-  #version {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    font-size: 14px;
-    color: #555;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>読み上げかるた</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Comic Sans MS", "Chalkboard SE", "Arial Rounded MT Bold", sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 10px;
+      font-size: 32px;
+      color: #333;
+    }
+    .menu {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .menu button {
+      width: 260px;
+      padding: 14px;
+      font-size: 20px;
+      border-radius: 10px;
+      border: none;
+      background: #ffcc66;
+      cursor: pointer;
+    }
+    .menu button:hover {
+      background: #ffdd88;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #666;
+      padding-bottom: 20px;
+    }
+  </style>
+
+  <script>
+    function openContactForm() {
+      alert("お問い合わせフォームは別の画面（タブ）で開きます。書き終わったら、その画面を閉じてホームに戻ってください。");
+      window.open("https://forms.gle/Z7jwYWgerrxvZAfSA", "_blank");
+    }
+  </script>
 </head>
 <body>
 
-<h2>漢字手書き入力デモ</h2>
+  <img src="images/logo.png" alt="Studio OZ ロゴ"
+       style="width:180px; margin-top:20px; margin-bottom:10px;">
 
-<p>出題：<span id="question">人</span></p>
+  <h1>読み上げかるた</h1>
 
-<canvas id="canvas" width="200" height="200"></canvas><br>
+  <div class="menu">
+    <button onclick="location.href='play.html'">🔊 読み上げ</button>
+    <button onclick="location.href='settings.html'">⚙️ 設定</button>
+    <button onclick="location.href='edit.html'">✏️ 単語編集</button>
+    <button onclick="location.href='illustration.html'">🖼️ イラスト集</button>
+    <button onclick="openContactForm()">📮 お問い合わせ</button>
+    <button onclick="location.href='help.html'">❓ ヘルプ</button>
+    <button onclick="location.href='terms.html'">📃 利用規約</button>
+    <button onclick="location.href='privacy.html'">🔒 プライバシーポリシー</button>
+  </div>
 
-<button id="clearBtn">クリア</button>
-<button id="recognizeBtn">認識</button>
-
-<div id="candidates"></div>
-
-<p>選んだ漢字：<input type="text" id="selectedKanji" readonly></p>
-
-<button id="okBtn">OK</button>
-
-<div id="result"></div>
-
-<!-- バージョン表示 -->
-<div id="version"></div>
-
-<script>
-  // --- バージョン情報 ---
-  const APP_VERSION = "1.0.1";
-  document.getElementById("version").textContent = "Version: " + APP_VERSION;
-
-  // --- 手書きキャンバス ---
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-
-  let drawing = false;
-  let lastX = 0;
-  let lastY = 0;
-
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "black";
-
-  canvas.addEventListener("mousedown", (e) => {
-    drawing = true;
-    lastX = e.offsetX;
-    lastY = e.offsetY;
-  });
-
-  canvas.addEventListener("mouseup", () => drawing = false);
-  canvas.addEventListener("mouseleave", () => drawing = false);
-
-  canvas.addEventListener("mousemove", (e) => {
-    if (!drawing) return;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-    lastX = e.offsetX;
-    lastY = e.offsetY;
-  });
-
-  // --- クリア ---
-  document.getElementById("clearBtn").onclick = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById("candidates").innerHTML = "";
-    document.getElementById("selectedKanji").value = "";
-    document.getElementById("result").textContent = "";
-  };
-
-  // --- 認識処理 ---
-  document.getElementById("recognizeBtn").onclick = () => {
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    const recognizer = new JHR.Recognizer();
-    const strokes = recognizer.imageToStrokes(img);
-    const results = recognizer.recognize(strokes).slice(0, 10);
-
-    const candidatesDiv = document.getElementById("candidates");
-    candidatesDiv.innerHTML = "";
-
-    results.forEach(r => {
-      const btn = document.createElement("button");
-      btn.textContent = r.character;
-      btn.onclick = () => {
-        document.getElementById("selectedKanji").value = r.character;
-      };
-      candidatesDiv.appendChild(btn);
-    });
-  };
-
-  // --- OKボタンで判定 ---
-  document.getElementById("okBtn").onclick = () => {
-    const question = document.getElementById("question").textContent;
-    const answer = document.getElementById("selectedKanji").value;
-    const result = document.getElementById("result");
-
-    if (answer === "") {
-      result.textContent = "漢字を選んでください";
-      result.style.color = "black";
-      return;
-    }
-
-    if (question === answer) {
-      result.textContent = "正解！";
-      result.style.color = "green";
-    } else {
-      result.textContent = "間違い…";
-      result.style.color = "red";
-    }
-  };
-</script>
+  <footer>
+    © 2026 Studio OZ<br>
+    Version: 1.0.5
+  </footer>
 
 </body>
 </html>

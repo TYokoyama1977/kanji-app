@@ -25,7 +25,6 @@
     </style>
 
     <!-- JHR（手書き漢字認識ライブラリ） -->
-    <!-- ★★★ 修正：defer を追加（構造変更なし） ★★★ -->
     <script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js" defer></script>
 </head>
 <body>
@@ -41,7 +40,6 @@
 <div id="result">認識結果：まだなし</div>
 <div id="candidates"></div>
 
-<!-- ★★★ 修正済み：構造そのまま、defer のみ追加 ★★★ -->
 <script defer>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -84,17 +82,16 @@
         candidatesDiv.textContent = "";
     });
 
+    // ★★★ JHR をキャンバスと紐づけて初期化 ★★★
+    const jhr = new JHR.Recognizer(canvas);
+
     // --- 認識 ---
     recognizeBtn.addEventListener("click", async () => {
         resultDiv.textContent = "認識中…";
         candidatesDiv.textContent = "";
 
-        // キャンバスを PNG に変換
-        const dataURL = canvas.toDataURL("image/png");
-
-        // JHR で認識（正しい初期化）
-        const jhr = new JHR.Recognizer();
-        const result = await jhr.recognize(dataURL);
+        // ★ PNG は使わない。ストロークから直接認識 ★
+        const result = await jhr.recognize();
 
         if (!result || result.length === 0) {
             resultDiv.textContent = "認識できませんでした";

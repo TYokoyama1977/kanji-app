@@ -25,7 +25,8 @@
     </style>
 
     <!-- JHR（手書き漢字認識ライブラリ） -->
-    <script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js"></script>
+    <!-- ★★★ 修正：defer を追加（構造変更なし） ★★★ -->
+    <script src="https://cdn.jsdelivr.net/gh/zacharyread/jlect-jhr/jlect-jhr.full.js" defer></script>
 </head>
 <body>
 
@@ -40,7 +41,7 @@
 <div id="result">認識結果：まだなし</div>
 <div id="candidates"></div>
 
-<!-- ★★★ 修正：defer を追加（構造変更なし） ★★★ -->
+<!-- ★★★ 修正済み：構造そのまま、defer のみ追加 ★★★ -->
 <script defer>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");

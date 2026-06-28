@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>手書き漢字認識デモ</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #canvas {
+            border: 2px solid #333;
+            touch-action: none;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        #candidates {
+            margin-top: 10px;
+            font-size: 20px;
+        }
+    </style>
+
+    <!-- ★★★ JHR をローカルから読み込む（Tracking Prevention 回避） ★★★ -->
+    <script src="./jlect-jhr.full.js" defer></script>
+</head>
+<body>
+
+<h2>手書き → 漢字認識デモ</h2>
+
+<canvas id="canvas" width="300" height="300"></canvas>
+<br><br>
+
+<button id="clearBtn">クリア</button>
+<button id="recognizeBtn">認識</button>
+
+<div id="result">認識結果：まだなし</div>
+<div id="candidates"></div>
+
+<script defer>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const clearBtn = document.getElementById("clearBtn");
+    const recognizeBtn = document.getElementById("recognizeBtn");
+    const resultDiv = document.getElementById("result");
+    const candidatesDiv = document.getElementById("candidates");
+
+    let drawing = false;
+
+    // --- 手書き ---
+    canvas.addEventListener("mousedown", () => {
+        drawing = true;
+        ctx.beginPath();
+    });
+
+    canvas.addEventListener("mouseup", () => {
+        drawing = false;
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#000";
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    });
+
+    // --- クリア ---
+    clearBtn.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        resultDiv.textContent = "認識結果：まだなし";
+        candidatesDiv.textContent = "";
+    });
+
+    // ★★★ JHR をキャンバスと紐づけて初期化 ★★★
+    const jhr = new JHR.Recognizer(canvas);
+
+    // --- 認識 ---
+    recognizeBtn.addEventListener("click", async () => {
+        resultDiv.textContent = "認識中…";
+        candidatesDiv.textContent = "";
+
+        // ★ PNG は使わない。ストロークから直接認識 ★
+        const result = await jhr.recognize();
+
+        if (!result || result.length === 0) {
+            resultDiv.textContent = "認識できませんでした";
+            return;
+        }
+
+        // 第1候補
+        resultDiv.textContent = "認識結果：" + result[0].character;
+
+        // 複数候補（最大5件）
+        const list = result.slice(0, 5).map(r => r.character).join("　");
+        candidatesDiv.textContent = "候補：" + list;
+    });
+</script>
+
+</body>
+</html>

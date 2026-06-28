@@ -40,7 +40,8 @@
 <div id="result">認識結果：まだなし</div>
 <div id="candidates"></div>
 
-<script>
+<!-- ★★★ 修正：defer を追加（構造変更なし） ★★★ -->
+<script defer>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const clearBtn = document.getElementById("clearBtn");
